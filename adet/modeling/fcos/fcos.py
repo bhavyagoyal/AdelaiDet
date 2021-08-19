@@ -3,7 +3,7 @@ from typing import List, Dict
 import torch
 from torch import nn
 from torch.nn import functional as F
-
+import numpy as np
 from detectron2.layers import ShapeSpec, NaiveSyncBatchNorm
 from detectron2.modeling.proposal_generator.build import PROPOSAL_GENERATOR_REGISTRY
 
@@ -11,7 +11,8 @@ from adet.layers import DFConv2d, NaiveGroupNorm
 from adet.utils.comm import compute_locations
 from .fcos_outputs import FCOSOutputs
 
-
+from collections import defaultdict
+import os
 __all__ = ["FCOS"]
 
 INF = 100000000
@@ -55,6 +56,10 @@ class FCOS(nn.Module):
         self.in_channels_to_top_module = self.fcos_head.in_channels_to_top_module
 
         self.fcos_outputs = FCOSOutputs(cfg)
+        self.use_fcos_outputs = None
+        self.saved_fcos_outputs_count = 0
+        self.model_count = None
+        #self.saved_fcos_outputs = defaultdict(list)
 
     def forward_head(self, features, top_module=None):
         features = [features[f] for f in self.in_features]
@@ -99,6 +104,43 @@ class FCOS(nn.Module):
                 }
             return results, losses
         else:
+            #for line in traceback.format_stack():
+            #    print(line.strip())
+            #exit(0)
+            if(self.use_fcos_outputs!=None):
+                if(self.use_fcos_outputs):
+                    save_location = 'testing2/saved'
+                    for j in range(self.model_count):
+                        logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
+                        with open(save_location+str(j)+'/'+str(self.saved_fcos_outputs_count)+'.npy', 'rb') as f:
+                            for i in range(len(logits_pred)):
+                                logits_pred_saved.append(np.load(f))
+                                reg_pred_saved.append(np.load(f))
+                                ctrness_pred_saved.append(np.load(f))
+                        for i in range(len(logits_pred)):
+                            logits_pred[i] +=  torch.from_numpy(logits_pred_saved[i]).cuda()
+                            reg_pred[i] += torch.from_numpy(reg_pred_saved[i]).cuda()
+                            ctrness_pred[i] += torch.from_numpy(ctrness_pred_saved[i]).cuda()
+                    for i in range(len(logits_pred)):
+                        logits_pred[i] = logits_pred[i]/(self.model_count+1)
+                        reg_pred[i] = reg_pred[i]/(self.model_count+1)
+                        ctrness_pred[i] = ctrness_pred[i]/(self.model_count+1) 
+                    self.saved_fcos_outputs_count+=1
+                else:
+                    save_location = 'testing2/saved'+str(self.model_count)+'/'
+                    if not os.path.exists(save_location):
+                        os.makedirs(save_location)
+                    logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
+                    for i in range(len(logits_pred)):
+                        logits_pred_saved.append(logits_pred[i].cpu().detach().numpy())
+                        reg_pred_saved.append(reg_pred[i].cpu().detach().numpy())
+                        ctrness_pred_saved.append(ctrness_pred[i].cpu().detach().numpy())
+                    with open(save_location+str(self.saved_fcos_outputs_count)+'.npy', 'wb') as f:
+                        for i in range(len(logits_pred_saved)):
+                            np.save(f, logits_pred_saved[i])
+                            np.save(f, reg_pred_saved[i])
+                            np.save(f, ctrness_pred_saved[i])
+                    self.saved_fcos_outputs_count+=1
             results = self.fcos_outputs.predict_proposals(
                 logits_pred, reg_pred, ctrness_pred,
                 locations, images.image_sizes, top_feats
