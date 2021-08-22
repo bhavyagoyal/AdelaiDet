@@ -404,7 +404,7 @@ class FCOSOutputs(nn.Module):
 
     def predict_proposals(
             self, logits_pred, reg_pred, ctrness_pred,
-            locations, image_sizes, top_feats=None
+            locations, image_sizes, top_feats=None, sigmoid=True
     ):
         if self.training:
             self.pre_nms_thresh = self.pre_nms_thresh_train
@@ -439,7 +439,7 @@ class FCOSOutputs(nn.Module):
 
             sampled_boxes.append(
                 self.forward_for_single_feature_map(
-                    l, o, r, c, image_sizes, t
+                    l, o, r, c, image_sizes, t, sigmoid
                 )
             )
 
@@ -456,17 +456,20 @@ class FCOSOutputs(nn.Module):
 
     def forward_for_single_feature_map(
             self, locations, logits_pred, reg_pred,
-            ctrness_pred, image_sizes, top_feat=None
+            ctrness_pred, image_sizes, top_feat=None, sigmoid=True
     ):
         N, C, H, W = logits_pred.shape
 
         # put in the same format as locations
         logits_pred = logits_pred.view(N, C, H, W).permute(0, 2, 3, 1)
-        logits_pred = logits_pred.reshape(N, -1, C).sigmoid()
+        logits_pred = logits_pred.reshape(N, -1, C)
         box_regression = reg_pred.view(N, 4, H, W).permute(0, 2, 3, 1)
         box_regression = box_regression.reshape(N, -1, 4)
         ctrness_pred = ctrness_pred.view(N, 1, H, W).permute(0, 2, 3, 1)
-        ctrness_pred = ctrness_pred.reshape(N, -1).sigmoid()
+        ctrness_pred = ctrness_pred.reshape(N, -1)
+        if(sigmoid):
+            logits_pred = logits_pred.sigmoid()
+            ctrness_pred = ctrness_pred.sigmoid()
         if top_feat is not None:
             top_feat = top_feat.view(N, -1, H, W).permute(0, 2, 3, 1)
             top_feat = top_feat.reshape(N, H * W, -1)

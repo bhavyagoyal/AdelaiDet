@@ -85,7 +85,6 @@ class FCOS(nn.Module):
         logits_pred, reg_pred, ctrness_pred, top_feats, bbox_towers = self.fcos_head(
             features, top_module, self.yield_proposal or self.yield_box_feats
         )
-
         if self.training:
             results, losses = self.fcos_outputs.losses(
                 logits_pred, reg_pred, ctrness_pred,
@@ -108,8 +107,11 @@ class FCOS(nn.Module):
             #    print(line.strip())
             #exit(0)
             if(self.use_fcos_outputs!=None):
+                for i in range(len(logits_pred)):
+                    logits_pred[i] = logits_pred[i].sigmoid()
+                    ctrness_pred[i] = ctrness_pred[i].sigmoid()
                 if(self.use_fcos_outputs):
-                    save_location = 'testing2/saved'
+                    save_location = 'testing/saved'
                     for j in range(self.model_count):
                         logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
                         with open(save_location+str(j)+'/'+str(self.saved_fcos_outputs_count)+'.npy', 'rb') as f:
@@ -127,7 +129,7 @@ class FCOS(nn.Module):
                         ctrness_pred[i] = ctrness_pred[i]/(self.model_count+1) 
                     self.saved_fcos_outputs_count+=1
                 else:
-                    save_location = 'testing2/saved'+str(self.model_count)+'/'
+                    save_location = 'testing/saved'+str(self.model_count)+'/'
                     if not os.path.exists(save_location):
                         os.makedirs(save_location)
                     logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
@@ -143,7 +145,7 @@ class FCOS(nn.Module):
                     self.saved_fcos_outputs_count+=1
             results = self.fcos_outputs.predict_proposals(
                 logits_pred, reg_pred, ctrness_pred,
-                locations, images.image_sizes, top_feats
+                locations, images.image_sizes, top_feats, self.use_fcos_outputs==None
             )
             extras = {}
             if self.yield_box_feats:
