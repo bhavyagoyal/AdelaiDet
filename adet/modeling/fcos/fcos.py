@@ -123,7 +123,13 @@ class FCOS(nn.Module):
                             logits_pred[i] +=  torch.from_numpy(logits_pred_saved[i]).cuda()
                             reg_pred[i] += torch.from_numpy(reg_pred_saved[i]).cuda()
                             ctrness_pred[i] += torch.from_numpy(ctrness_pred_saved[i]).cuda()
+                            #logits_pred[i] =  torch.cat( (logits_pred[i],torch.from_numpy(logits_pred_saved[i]).cuda()) )
+                            #reg_pred[i] =  torch.cat( (reg_pred[i],torch.from_numpy(reg_pred_saved[i]).cuda()) )
+                            #ctrness_pred[i] =  torch.cat( (ctrness_pred[i],torch.from_numpy(ctrness_pred_saved[i]).cuda()) )
                     for i in range(len(logits_pred)):
+                        #logits_pred[i], _ = torch.median(logits_pred[i], dim=0, keepdims=True)
+                        #reg_pred[i], _ = torch.median(reg_pred[i], dim=0, keepdims=True)
+                        #ctrness_pred[i], _ = torch.median(ctrness_pred[i], dim=0, keepdims=True)
                         logits_pred[i] = logits_pred[i]/(self.model_count+1)
                         reg_pred[i] = reg_pred[i]/(self.model_count+1)
                         ctrness_pred[i] = ctrness_pred[i]/(self.model_count+1) 
