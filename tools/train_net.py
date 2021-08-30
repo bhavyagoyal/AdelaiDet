@@ -197,41 +197,45 @@ def main(args):
     cfg = setup(args)
 
     if args.eval_only:
-        #args.opts.append('DATASETS.TRAIN')
-        #args.opts.append(('coco_2017_train_custom',))
-        #args.opts.append('DATASETS.TEST')
-        #args.opts.append(('coco_2017_val_custom',))
-        #weights = ['motionshot0', 'motionshot1', 'motionshot2', 'motionshot3', 'motionshot4', 'motionshot5']
-        #locs = ['motion_shot/0', 'motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4', 'motion_shot/5']
-        #weights = ['motion5', 'shot5']
+        args.opts.append('DATASETS.TRAIN')
+        args.opts.append(('coco_2017_train_custom',))
+        args.opts.append('DATASETS.TEST')
+        args.opts.append(('coco_2017_val_custom',))
+        weights = ['_motionshot0', '_motionshot1', '_motionshot2', '_motionshot3', '_motionshot4', '_motionshot5']
+        locs = ['motion_shot/0', 'motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4', 'motion_shot/5']
+        #weights = ['_motion5', '_shot5']
         #locs = ['motion_blur/5', 'shot_noise/5']
-        #for i in range(len(weights)-1):
-        #    loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
-        #    register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
-        #    register_coco_instances("coco_2017_train_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
-        #    #args.opts[-5] = 'training_dir/fcos_R_50_1x_' + weights[i] + '/model_final.pth'
-        #    args.opts[-3] = ('coco_2017_train_custom' + str(i),)
-        #    args.opts[-1] = ('coco_2017_val_custom' + str(i),)
-        #    cfg = setup(args)
-        #    model = Trainer.build_model(cfg)
-        #    model.proposal_generator.use_fcos_outputs = False
-        #    model.proposal_generator.model_count = i
-        #    AdetCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
-        #        cfg.MODEL.WEIGHTS, resume=args.resume
-        #    )
-        #    res = Trainer.test(cfg, model) # d2 defaults.py
+        #weights = ['', '_repeat']
+        #weights = ['', '']
+        for i in range(len(weights)):
+            loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
+            register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
+            register_coco_instances("coco_2017_train_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
+            args.opts[-7] = 'testing' + str(i)
+            args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+            args.opts[-3] = ('coco_2017_train_custom' + str(i),)
+            args.opts[-1] = ('coco_2017_val_custom' + str(i),)
+            cfg = setup(args)
+            model = Trainer.build_model(cfg)
+            model.proposal_generator.use_fcos_outputs = False
+            model.proposal_generator.model_count = i
+            AdetCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+                cfg.MODEL.WEIGHTS, resume=args.resume
+            )
+            res = Trainer.test(cfg, model) # d2 defaults.py
 
-        #i=len(weights)-1
-        #loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
-        #register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
-        #register_coco_instances("coco_2017_train_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
-        ##args.opts[-5] = 'training_dir/fcos_R_50_1x_' + weights[i] + '/model_final.pth'
-        #args.opts[-3] = ('coco_2017_train_custom' + str(i),)
-        #args.opts[-1] = ('coco_2017_val_custom' + str(i),)
+        i=len(weights)-1
+        loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
+        register_coco_instances("coco_2017_val_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
+        register_coco_instances("coco_2017_train_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
+        args.opts[-7] = 'testing'
+        args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+        args.opts[-3] = ('coco_2017_train_custom' + str(i+1),)
+        args.opts[-1] = ('coco_2017_val_custom' + str(i+1),)
         cfg = setup(args)
         model = Trainer.build_model(cfg)
-        #model.proposal_generator.use_fcos_outputs = True
-        #model.proposal_generator.model_count = i
+        model.proposal_generator.use_fcos_outputs = True
+        model.proposal_generator.model_count = i
         AdetCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )

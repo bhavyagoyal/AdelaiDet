@@ -59,6 +59,7 @@ class FCOS(nn.Module):
         self.use_fcos_outputs = None
         self.saved_fcos_outputs_count = 0
         self.model_count = None
+        self.output_dir = cfg.OUTPUT_DIR
         #self.saved_fcos_outputs = defaultdict(list)
 
     def forward_head(self, features, top_module=None):
@@ -111,10 +112,10 @@ class FCOS(nn.Module):
                     logits_pred[i] = logits_pred[i].sigmoid()
                     ctrness_pred[i] = ctrness_pred[i].sigmoid()
                 if(self.use_fcos_outputs):
-                    save_location = 'testing/saved'
                     for j in range(self.model_count):
+                        save_location = self.output_dir + str(j) + '/saved/'
                         logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
-                        with open(save_location+str(j)+'/'+str(self.saved_fcos_outputs_count)+'.npy', 'rb') as f:
+                        with open(save_location+str(self.saved_fcos_outputs_count)+'.npy', 'rb') as f:
                             for i in range(len(logits_pred)):
                                 logits_pred_saved.append(np.load(f))
                                 reg_pred_saved.append(np.load(f))
@@ -135,7 +136,7 @@ class FCOS(nn.Module):
                         ctrness_pred[i] = ctrness_pred[i]/(self.model_count+1) 
                     self.saved_fcos_outputs_count+=1
                 else:
-                    save_location = 'testing/saved'+str(self.model_count)+'/'
+                    save_location = self.output_dir + '/saved/'
                     if not os.path.exists(save_location):
                         os.makedirs(save_location)
                     logits_pred_saved, reg_pred_saved, ctrness_pred_saved = [],[],[]
