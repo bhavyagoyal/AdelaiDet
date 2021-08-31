@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --partition=research
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:v100:4
 #SBATCH --time=100:0:0
 #SBATCH --exclude=euler17
 #SBATCH -o slurm.%j.%N.out # STDOUT
@@ -29,10 +29,10 @@ echo $CUDA_VISIBLE_DEVICES
 nvidia-smi
 top -b -d1 -n1 | grep -i "%Cpu" #This will show cpu utilization at the start of the script
 
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_blur/5
+export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/shot_noise/5
 #export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/
-#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/MS_R_50_2x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:12246 OUTPUT_DIR training_dir/fcos_MS_R_50_2x_repeat SOLVER.CHECKPOINT_PERIOD 30000
-#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml  --eval-only --num-gpus 1 OUTPUT_DIR testing MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:11246 OUTPUT_DIR training_dir/fcos_R_50_1x_shot5_repeat SOLVER.CHECKPOINT_PERIOD 30000
+#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml  --eval-only --num-gpus 1 OUTPUT_DIR test MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
 
 #python tools/visualize_data.py --config-file configs/FCOS-Detection/R_50_1x.yaml --source annotation --output-dir dir2/ 
 
@@ -50,7 +50,7 @@ top -b -d1 -n1 | grep -i "%Cpu" #This will show cpu utilization at the start of 
 #export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/5
 #python tools/visualize_json_results.py --input testing5/inference/coco_instances_results.json --output dir5/ --dataset coco_2017_val
 
-python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output generated/output  --input generated/0.png generated/1.png generated/2.png generated/3.png generated/4.png generated/5.png generated/6.png generated/7.png generated/8.png generated/9.png --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output generated/output  --input generated/0.png generated/1.png generated/2.png generated/3.png generated/4.png generated/5.png generated/6.png generated/7.png generated/8.png generated/9.png --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
 
 
 #OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/city_R_50_1x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:12146 OUTPUT_DIR training_dir/city/R_50_1x_nochoice_lr005 SOLVER.CHECKPOINT_PERIOD 30000

@@ -203,15 +203,19 @@ def main(args):
         args.opts.append(('coco_2017_val_custom',))
         weights = ['_motionshot0', '_motionshot1', '_motionshot2', '_motionshot3', '_motionshot4', '_motionshot5']
         locs = ['motion_shot/0', 'motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4', 'motion_shot/5']
+        weights = ['_motionshot1', '_motionshot2', '_motionshot3', '_motionshot4']
+        weights = ['', '', '', '']
+        locs = ['motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4']
         #weights = ['_motion5', '_shot5']
         #locs = ['motion_blur/5', 'shot_noise/5']
         #weights = ['', '_repeat']
         #weights = ['', '']
+        output_dir = cfg.OUTPUT_DIR
         for i in range(len(weights)):
             loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
             register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
             register_coco_instances("coco_2017_train_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
-            args.opts[-7] = 'testing' + str(i)
+            args.opts[-7] = output_dir + str(i)
             args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
             args.opts[-3] = ('coco_2017_train_custom' + str(i),)
             args.opts[-1] = ('coco_2017_val_custom' + str(i),)
@@ -228,7 +232,7 @@ def main(args):
         loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
         register_coco_instances("coco_2017_val_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
         register_coco_instances("coco_2017_train_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
-        args.opts[-7] = 'testing'
+        args.opts[-7] = output_dir
         args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
         args.opts[-3] = ('coco_2017_train_custom' + str(i+1),)
         args.opts[-1] = ('coco_2017_val_custom' + str(i+1),)
