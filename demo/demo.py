@@ -69,18 +69,33 @@ if __name__ == "__main__":
     args = get_parser().parse_args()
     logger = setup_logger()
     logger.info("Arguments: " + str(args))
-
     cfg = setup_cfg(args)
 
     demo = VisualizationDemo(cfg)
 
+    output_dir = cfg.OUTPUT_DIR 
     if args.input:
         if os.path.isdir(args.input[0]):
             args.input = [os.path.join(args.input[0], fname) for fname in os.listdir(args.input[0])]
         elif len(args.input) == 1:
             args.input = glob.glob(os.path.expanduser(args.input[0]))
             assert args.input, "The input path(s) was not found"
-        for path in tqdm.tqdm(args.input, disable=not args.output):
+        args.input.append(args.input[-1])
+        n = len(args.input)-1
+        for i, path in enumerate(args.input):
+            print(i)
+            if(i==n):
+                args.opts[-3] = output_dir
+                cfg = setup_cfg(args)
+                demo = VisualizationDemo(cfg)
+                demo.predictor.model.proposal_generator.use_fcos_outputs = True
+                demo.predictor.model.proposal_generator.model_count = i-1
+            else:
+                args.opts[-3] = output_dir + str(i)
+                cfg = setup_cfg(args)
+                demo = VisualizationDemo(cfg)
+                demo.predictor.model.proposal_generator.use_fcos_outputs = False 
+                demo.predictor.model.proposal_generator.model_count = i
             # use PIL, to be consistent with evaluation
             img = read_image(path, format="BGR")
             start_time = time.time()
@@ -88,10 +103,12 @@ if __name__ == "__main__":
             logger.info(
                 "{}: detected {} instances in {:.2f}s".format(
                     path, len(predictions["instances"]), time.time() - start_time
-                )
+    )
             )
 
             if args.output:
+                if(i==n):
+                    path = path[:-4] + 'output'+str(n) + path[-4:]
                 if os.path.isdir(args.output):
                     assert os.path.isdir(args.output), args.output
                     out_filename = os.path.join(args.output, os.path.basename(path))
