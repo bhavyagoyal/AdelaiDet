@@ -82,8 +82,11 @@ if __name__ == "__main__":
             assert args.input, "The input path(s) was not found"
         args.input.append(args.input[-1])
         n = len(args.input)-1
+        base = 'training_dir/fcos_R_50_1x'
+        weights = ['_graymotionshot1', '_graymotionshot4', '_graymotionshot4']
         for i, path in enumerate(args.input):
             print(i)
+            args.opts[-1] = base + weights[i] + '/model_final.pth'
             if(i==n):
                 args.opts[-3] = output_dir
                 cfg = setup_cfg(args)
