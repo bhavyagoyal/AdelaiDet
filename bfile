@@ -1,22 +1,18 @@
 #!/usr/bin/env bash
 #SBATCH --partition=research
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:v100:4
-#SBATCH --time=100:0:0
-#SBATCH --exclude=euler17
+#SBATCH --gres=gpu:1
+#SBATCH --time=48:0:0
+###SBATCH --exclude=euler07,euler09
+###SBATCH --mem=300000
 #SBATCH -o slurm.%j.%N.out # STDOUT
 #SBATCH -e slurm.%j.%N.err # STDERR
 #SBATCH --job-name=adalai
 
 
 module load anaconda/mini/4.9.2
-#module load nvidia/cuda/11.3.1
-
-#module load anaconda/3
 bootstrap_conda
-#conda create -y -n minienv python=3
-
-conda activate detectron_fcos
+conda activate minienv11
 
 #conda install -y pytorch torchvision cudatoolkit=10.2 -c pytorch
 #conda install -y tensorboard pillow
@@ -29,28 +25,78 @@ echo $CUDA_VISIBLE_DEVICES
 nvidia-smi
 top -b -d1 -n1 | grep -i "%Cpu" #This will show cpu utilization at the start of the script
 
-export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/shot_noise/5
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/1/
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/1
 #export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/
-OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:11246 OUTPUT_DIR training_dir/fcos_R_50_1x_shot5_repeat SOLVER.CHECKPOINT_PERIOD 30000
-#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml  --eval-only --num-gpus 1 OUTPUT_DIR test MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/R_50_1x.yaml --num-gpus 8 --dist-url tcp://127.0.0.1:14535 OUTPUT_DIR training_dir_balance3/fcos_R_50_1x_stylizedcomb SOLVER.CHECKPOINT_PERIOD 45000
+#OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/city_R_50_1x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:11535 OUTPUT_DIR training_dir_cityscapes_balance3/fcos_R_50_1x_stylizedcomb SOLVER.CHECKPOINT_PERIOD 12000
+OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/city_R_50_1x.yaml  --eval-only --num-gpus 1 OUTPUT_DIR moretest MODEL.WEIGHTS training_dir_cityscapes/fcos_R_50_1x/model_final.pth
 
 #python tools/visualize_data.py --config-file configs/FCOS-Detection/R_50_1x.yaml --source annotation --output-dir dir2/ 
 
-#python tools/visualize_json_results.py --input testing/inference/coco_instances_results.json --output dir/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/0
-#python tools/visualize_json_results.py --input testing0/inference/coco_instances_results.json --output dir0/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/1
-#python tools/visualize_json_results.py --input testing1/inference/coco_instances_results.json --output dir1/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/2
-#python tools/visualize_json_results.py --input testing2/inference/coco_instances_results.json --output dir2/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/3
-#python tools/visualize_json_results.py --input testing3/inference/coco_instances_results.json --output dir3/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/4
-#python tools/visualize_json_results.py --input testing4/inference/coco_instances_results.json --output dir4/ --dataset coco_2017_val
-#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distorted/motion_shot/5
-#python tools/visualize_json_results.py --input testing5/inference/coco_instances_results.json --output dir5/ --dataset coco_2017_val
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/
+#python tools/visualize_json_results.py --input training_dir/fcos_R_50_1x/inference/coco_instances_results.json --output dircocorepeatgt/ --dataset coco_2017_val --conf-threshold 0.5
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/1
+#python tools/visualize_json_results.py --input test0/inference/coco_instances_results.json --output dircocorepeat0/ --dataset coco_2017_val --conf-threshold 0.5 --tpsfile picklesaves_coco --tpsmodel 1
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/2
+#python tools/visualize_json_results.py --input test1/inference/coco_instances_results.json --output dircocorepeat1/ --dataset coco_2017_val --conf-threshold 0.5 --tpsfile picklesaves_coco  --tpsmodel 2
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/3
+#python tools/visualize_json_results.py --input test2/inference/coco_instances_results.json --output dircocorepeat2/ --dataset coco_2017_val --conf-threshold 0.5 --tpsfile picklesaves_coco  --tpsmodel 3
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/4
+#python tools/visualize_json_results.py --input test3/inference/coco_instances_results.json --output dircocorepeat3/ --dataset coco_2017_val --conf-threshold 0.5 --tpsfile picklesaves_coco  --tpsmodel 4
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/coco17_distortedbalance3/motion_shot/4
+#python tools/visualize_json_results.py --input test/inference/coco_instances_results.json --output dircocorepeat/ --dataset coco_2017_val --conf-threshold 0.5 --tpsfile picklesaves_coco   --tpsmodel 5
 
-#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output generated/output  --input generated/0.png generated/1.png generated/2.png generated/3.png generated/4.png generated/5.png generated/6.png generated/7.png generated/8.png generated/9.png --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+
+
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/
+#python tools/visualize_json_results.py --input training_dir_cityscapes/fcos_R_50_1x/inference/coco_instances_results.json --output dircityrepeatgt/ --dataset cityscapes_detection_val --conf-threshold 0.5
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/1
+#python -u tools/visualize_json_results.py --input citytest0/inference/coco_instances_results.json --output dircityrepeat0/ --dataset cityscapes_detection_val --conf-threshold 0.5 --tpsmodel 1
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/2
+#python tools/visualize_json_results.py --input citytest1/inference/coco_instances_results.json --output dircityrepeat1/ --dataset cityscapes_detection_val --conf-threshold 0.5 --tpsmodel 2
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/3
+#python tools/visualize_json_results.py --input citytest2/inference/coco_instances_results.json --output dircityrepeat2/ --dataset cityscapes_detection_val --conf-threshold 0.5 --tpsmodel 3
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/4
+#python tools/visualize_json_results.py --input citytest3/inference/coco_instances_results.json --output dircityrepeat3/ --dataset cityscapes_detection_val --conf-threshold 0.5 --tpsmodel 4
+#export DETECTRON2_DATASETS=/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/4
+#python tools/visualize_json_results.py --input citytest/inference/coco_instances_results.json --output dircityrepeat/ --dataset cityscapes_detection_val --conf-threshold 0.5 --tpsmodel 5
+
+
+#GENERATED=/srv/home/bhavya/datasets/coco17_distorted/shot_noise/5/coco/val2017/
+#GENERATED=/srv/home/bhavya/datasets/onsemidataset/day1
+#GENERATED=/srv/home/bhavya/datasets/spad/spad_raw/sizhou/0604-runwalk-3/output_images/generated200
+#GENERATED=/srv/home/bhavya/datasets/spad/spad_raw/sizhou/0604-runwalk-3/generated500
+#GENERATED=/srv/home/bhavya/datasets/pointgray/day4/blackfly2/exp5_bright
+#mkdir ${GENERATED}/output
+#mkdir ${GENERATED}/outputgraymotion5
+#mkdir ${GENERATED}/outputgraymotionshot1
+#mkdir ${GENERATED}/outputgraymotionshot2
+#mkdir ${GENERATED}/outputgraymotionshot3
+#mkdir ${GENERATED}/outputgraymotionshot4
+#mkdir ${GENERATED}/outputgraymotionshot1234
+#mkdir ${GENERATED}/outputgrayshot5
+
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/output --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotion5 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotion5/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotionshot1 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotionshot1/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotionshot2 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotionshot2/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotionshot3 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotionshot3/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotionshot4 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotionshot4/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgraymotionshot1234 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_graymotionshot1234/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}/outputgrayshot5 --input ${GENERATED}/0.png ${GENERATED}/1.png ${GENERATED}/2.png ${GENERATED}/3.png ${GENERATED}/4.png ${GENERATED}/5.png ${GENERATED}/6.png ${GENERATED}/7.png ${GENERATED}/8.png ${GENERATED}/9.png --confidence-threshold 0.3 --opts MODEL.WEIGHTS training_dir/fcos_R_50_1x_grayshot5/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output /srv/home/bhavya/output --input ${GENERATED}/000000006723.jpg  --opts OUTPUT_DIR testing MODEL.WEIGHTS training_dir/fcos_R_50_1x/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/city_R_50_1x.yaml --output ${GENERATED}_cityoutput --input ${GENERATED}/  --opts OUTPUT_DIR citytesting MODEL.WEIGHTS training_dir_cityscapes_balance3/fcos_R_50_1x_motionshot1/model_final.pth
+
+
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}_output --input ${GENERATED}/Sequencer-88.png ${GENERATED}/Sequencer-89.png  --opts OUTPUT_DIR testing MODEL.WEIGHTS training_dir_balance3/fcos_R_50_1x_motionshot2/model_final.pth
+#python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --output ${GENERATED}_output --input ${GENERATED}  --opts OUTPUT_DIR moretesting MODEL.WEIGHTS training_dir_balance3/fcos_R_50_1x_motionshot4/model_final.pth
+#for (( i = 0; i < 25; i++ ))
+#do
+#	inp1=$((i*2+1))
+#	inp2=$((i*2))
+#	python demo/demo.py --config-file configs/FCOS-Detection/R_50_1x.yaml --confidence-threshold 0.3 --output ${GENERATED}_output2 --input ${GENERATED}/Sequencer-${inp1}.png ${GENERATED}/Sequencer-${inp2}.png  --opts OUTPUT_DIR coco2testing MODEL.WEIGHTS training_dir_balance3/fcos_R_50_1x_motionshot2/model_final.pth
+#done
 
 
 #OMP_NUM_THREADS=1 python tools/train_net.py --config-file configs/FCOS-Detection/city_R_50_1x.yaml --num-gpus 4 --dist-url tcp://127.0.0.1:12146 OUTPUT_DIR training_dir/city/R_50_1x_nochoice_lr005 SOLVER.CHECKPOINT_PERIOD 30000

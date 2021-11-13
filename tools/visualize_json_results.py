@@ -8,7 +8,7 @@ import os
 from collections import defaultdict
 import cv2
 import tqdm
-
+import pickle
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.structures import Boxes, BoxMode, Instances
 from detectron2.utils.file_io import PathManager
@@ -35,7 +35,7 @@ def create_instances(predictions, image_size):
         ret.pred_masks = [predictions[i]["segmentation"] for i in chosen]
     except KeyError:
         pass
-    return ret
+    return ret, chosen
 
 
 if __name__ == "__main__":
@@ -45,6 +45,8 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True, help="JSON file produced by the model")
     parser.add_argument("--output", required=True, help="output directory")
     parser.add_argument("--dataset", help="name of the dataset", default="coco_2017_val")
+    parser.add_argument("--tpsfile", help="True positives file", default="picklesaves")
+    parser.add_argument("--tpsmodel", help="True positives file", default="1")
     parser.add_argument("--conf-threshold", default=0.5, type=float, help="confidence threshold")
     args = parser.parse_args()
 
@@ -54,7 +56,9 @@ if __name__ == "__main__":
         predictions = json.load(f)
 
     pred_by_image = defaultdict(list)
-    for p in predictions:
+    print('All: ', len(predictions))
+    for idx, p in enumerate(predictions):
+        p["det_id"] = idx+1
         pred_by_image[p["image_id"]].append(p)
 
     dicts = list(DatasetCatalog.get(args.dataset))
@@ -75,13 +79,31 @@ if __name__ == "__main__":
 
     os.makedirs(args.output, exist_ok=True)
 
+    tps_ids = []
+    if('coco' in args.tpsfile):
+        cats = 80
+    else:
+        cats = 8
+    for i in range(cats):
+        with open("/srv/home/bhavya/Documents/AdelaiDet/" + args.tpsfile + "/" + str(i) + "tps_ids" + str(args.tpsmodel) + ".pkl", "rb") as f:
+            tps_i = pickle.load(f)
+            tps_ids.extend(tps_i)
+
+    tps_ids = list(set(tps_ids))
+    
     for dic in tqdm.tqdm(dicts):
         img = cv2.imread(dic["file_name"], cv2.IMREAD_COLOR)[:, :, ::-1]
         basename = os.path.basename(dic["file_name"])
 
-        predictions = create_instances(pred_by_image[dic["image_id"]], img.shape[:2])
+        predictions, chosen = create_instances(pred_by_image[dic["image_id"]], img.shape[:2])
+        #print(len(predictions), len(chosen))
+        green = [False for x in chosen]
+        for idx, choose in enumerate(chosen):
+            pr = pred_by_image[dic["image_id"]]
+            if( pr[chosen[idx]]["det_id"] in tps_ids):
+                green[idx]=True
         vis = Visualizer(img, metadata)
-        vis_pred = vis.draw_instance_predictions(predictions).get_image()
+        vis_pred = vis.draw_instance_predictions(predictions, green).get_image()
 
         vis = Visualizer(img, metadata)
         vis_gt = vis.draw_dataset_dict(dic).get_image()

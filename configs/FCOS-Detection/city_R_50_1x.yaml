@@ -1,0 +1,20 @@
+_BASE_: "Base-FCOS.yaml"
+MODEL:
+  WEIGHTS: "detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl"
+  RESNETS:
+    DEPTH: 50
+INPUT:
+  MIN_SIZE_TRAIN: (1024,)
+  MIN_SIZE_TEST: 1024
+  MAX_SIZE_TRAIN: 2048
+  MAX_SIZE_TEST: 2048
+DATASETS:
+  TRAIN: ("cityscapes_detection_train",)
+  TEST: ("cityscapes_detection_val",)
+SOLVER:
+  BASE_LR: 0.005
+  STEPS: (18000,)
+  MAX_ITER: 24000
+  IMS_PER_BATCH: 8
+TEST:
+  EVAL_PERIOD: 8000

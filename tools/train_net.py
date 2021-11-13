@@ -44,6 +44,7 @@ from adet.evaluation import TextEvaluator
 import copy
 from detectron2.data.datasets import register_coco_instances
 from detectron2.data.datasets.builtin_meta import _get_builtin_metadata
+from detectron2.data import MetadataCatalog, DatasetCatalog
 
 class Trainer(DefaultTrainer):
     """
@@ -194,7 +195,12 @@ def setup(args):
 
 
 def main(args):
-    cfg = setup(args)
+    #city_loc = '/srv/home/bhavya/datasets/cityscapes/coco/'
+    #city_loc = '/srv/home/bhavya/datasets/cityscapes_distortedbalance3/motion_shot/1/coco/'
+    #city_loc = os.getenv("DETECTRON2_DATASETS", "datasets") + '/cityscapes/'
+    #register_coco_instances("cityscapes_detection_train", {}, city_loc + 'annotations/instances_train2017.json', city_loc)
+    #register_coco_instances("cityscapes_detection_val", {}, city_loc + 'annotations/instances_val2017.json', city_loc)
+
 
     if args.eval_only:
         args.opts.append('DATASETS.TRAIN')
@@ -204,23 +210,28 @@ def main(args):
         #weights = ['_graymotionshot0', '_graymotionshot1', '_graymotionshot2', '_graymotionshot3', '_graymotionshot4', '_graymotionshot5']
         #locs = ['motion_shot/0', 'motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4', 'motion_shot/5']
         #weights = ['_graymotionshot1234', '_graymotionshot1234', '_graymotionshot1234', '_graymotionshot1234']
-        #locs = ['motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4']
-        #weights = ['_motionshot1', '_motionshot2', '_motionshot3', '_motionshot4']
+        locs = ['motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4']
+        weights = ['_motionshot1', '_motionshot2', '_motionshot3', '_motionshot4']
+        #locs = ['motion_shot/4', 'motion_shot/4']
+        #weights = ['_motionshot4', '_motionshot4_repeat']
         ##weights = ['', '', '', '']
         ##locs = ['motion_shot/1', 'motion_shot/2', 'motion_shot/3', 'motion_shot/4']
-        weights = ['_motion12345', '_shot12345']
-        locs = ['motion_blur/5', 'shot_noise/5']
+        #weights = ['_motion12345', '_shot12345']
+        #locs = ['motion_blur/5', 'shot_noise/5']
         ##weights = ['', '_repeat']
         ##weights = ['', '']
-        output_dir = cfg.OUTPUT_DIR
+        #output_dir = cfg.OUTPUT_DIR
+        output_dir = args.opts[-7]
         for i in range(len(weights)):
-            loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
-            register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
-            register_coco_instances("coco_2017_train_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
+            #loc = '/srv/home/bhavya/datasets/coco17_distortedbalance3/' + locs[i] + '/coco/'
+            #register_coco_instances("coco_2017_val_custom"+str(i), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
+            loc = '/srv/home/bhavya/datasets/cityscapes_distortedbalance3/' + locs[i] + '/cityscapes/'
+            register_coco_instances("cityscapes_detection_val_custom"+str(i), {}, loc + "annotations/instances_val2017.json", loc)
             args.opts[-7] = output_dir + str(i)
-            args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
-            args.opts[-3] = ('coco_2017_train_custom' + str(i),)
-            args.opts[-1] = ('coco_2017_val_custom' + str(i),)
+            #args.opts[-5] = 'training_dir_balance3/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+            #args.opts[-1] = ('coco_2017_val_custom' + str(i),)
+            args.opts[-5] = 'training_dir_cityscapes_balance3/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+            args.opts[-1] = ('cityscapes_detection_val_custom' + str(i),)
             cfg = setup(args)
             model = Trainer.build_model(cfg)
             model.proposal_generator.use_fcos_outputs = False
@@ -231,13 +242,16 @@ def main(args):
             res = Trainer.test(cfg, model) # d2 defaults.py
 
         i=len(weights)-1
-        loc = '/srv/home/bhavya/datasets/coco17_distorted/' + locs[i] + '/coco/'
-        register_coco_instances("coco_2017_val_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
-        register_coco_instances("coco_2017_train_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_train2017.json", loc + "train2017")
+        #loc = '/srv/home/bhavya/datasets/coco17_distortedbalance3/' + locs[i] + '/coco/'
+        #register_coco_instances("coco_2017_val_custom"+str(i+1), _get_builtin_metadata('coco'), loc + "annotations/instances_val2017.json", loc + "val2017")
+        loc = '/srv/home/bhavya/datasets/cityscapes_distortedbalance3/' + locs[i] + '/cityscapes/'
+        register_coco_instances("cityscapes_detection_val_custom"+str(i+1), {}, loc + "annotations/instances_val2017.json", loc)
         args.opts[-7] = output_dir
-        args.opts[-5] = 'training_dir/fcos_R_50_1x' + weights[i] + '/model_final.pth'
-        args.opts[-3] = ('coco_2017_train_custom' + str(i+1),)
-        args.opts[-1] = ('coco_2017_val_custom' + str(i+1),)
+        #args.opts[-5] = 'training_dir_balance3/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+        #args.opts[-1] = ('coco_2017_val_custom' + str(i+1),)
+        args.opts[-5] = 'training_dir_cityscapes_balance3/fcos_R_50_1x' + weights[i] + '/model_final.pth'
+        args.opts[-1] = ('cityscapes_detection_val_custom' + str(i+1),)
+
         cfg = setup(args)
         model = Trainer.build_model(cfg)
         model.proposal_generator.use_fcos_outputs = True
@@ -253,6 +267,7 @@ def main(args):
             res.update(Trainer.test_with_TTA(cfg, model))
         return res
 
+    cfg = setup(args)
     """
     If you'd like to do anything fancier than the standard training logic,
     consider writing your own training loop or subclassing the trainer.
